@@ -7,12 +7,12 @@ from alembic import context
 import json
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
-with open("../secrets/db.json", "r") as f:
-    db_creds = json.loads(f)
+with open("secrets/db.json", "r") as f:
+    db_creds = json.loads(f.read())
 
 db_url = f"postgresql://{db_creds['user']}:{db_creds['password']}@{db_creds['host']}/{db_creds['database']}"
 config = context.config
-config.set_main_option("sqlalchemy.url")
+config.set_main_option("sqlalchemy.url", db_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
