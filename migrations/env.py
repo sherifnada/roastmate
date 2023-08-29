@@ -4,10 +4,15 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
-
+import json
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
+with open("../secrets/db.json", "r") as f:
+    db_creds = json.loads(f)
+
+db_url = f"postgresql://{db_creds['user']}:{db_creds['password']}@{db_creds['host']}/{db_creds['database']}"
 config = context.config
+config.set_main_option("sqlalchemy.url")
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
