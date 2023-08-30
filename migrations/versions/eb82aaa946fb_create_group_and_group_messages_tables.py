@@ -22,7 +22,7 @@ fk_constraint = "fk_group_id"
 
 def upgrade() -> None:
     op.create_table(
-        "group",
+        "imessage_group",
         sa.Column('id', sa.String(200), primary_key=True),
     )
 
@@ -32,12 +32,13 @@ def upgrade() -> None:
         sa.Column("date_sent", sa.TIMESTAMP(timezone=True)),
         sa.Column("content", sa.TEXT),
         sa.Column("sender", sa.TEXT),
+        sa.Column("date_received", sa.TIMESTAMP(timezone=True), index=True)
     )
 
     op.create_foreign_key(
         constraint_name=fk_constraint,
         source_table="group_message",
-        referent_table="group",
+        referent_table="imessage_group",
         local_cols=['group_id'],
         remote_cols=['id']
     )
@@ -46,4 +47,4 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_constraint(fk_constraint, table_name="group_message")
     op.drop_table("group_message")
-    op.drop_table("group")
+    op.drop_table("imessage_group")
