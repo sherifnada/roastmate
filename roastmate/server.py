@@ -8,6 +8,7 @@ from sanic import Sanic, Request
 from sanic.response import text
 from sanic.exceptions import SanicException
 
+from roastmate import strings
 from roastmate.db_client import DbClient
 from roastmate.llm_client import OpenAiClient
 from roastmate.prompts import get_group_message_roast_prompt
@@ -47,15 +48,12 @@ async def receive(request: Request):
         if not await is_known_group(group_id):
             await insert_known_group(group_id)
             await save_message(**message_properties)
-            welcome_message = await generate_welcome_message()
-            await app.ctx.sendblue.send_imessage_text(group_id, welcome_message)
+            await app.ctx.sendblue.send_imessage_text(group_id, strings.GROUP_WELCOME_MESSAGE)
             return text("Officer I've never seen this group before")
         else:
             await save_message(**message_properties)
             previous_messages = await get_previous_group_messages(group_id)
             message = await generate_quippy_response(previous_messages)
-
-
             await save_message(group_id, message, "+11234567890", datetime.utcnow(), datetime.utcnow(), "Roastmate", SenderRole.LLM)
             await app.ctx.sendblue.send_imessage_text(group_id, message)
             return text(f"We have seen group {group_id} before")
@@ -87,14 +85,6 @@ def parse_message(group_id: str, request_body: dict) -> dict:
             'Expected content, sender, and date_updated to be set for a group message webhook',
             status_code=400
         )
-
-
-async def generate_welcome_message() -> str:
-    welcome_messages = [
-        "new phone who dis?",
-        "I'm Roastmate, the digital dose of sass and wit you didn't know you needed. Buckle up buckaroos, it's roastin' time.",
-    ]
-    return welcome_messages[random.randrange(len(welcome_messages))]
 
 
 async def generate_quippy_response(previous_messages: [List[TextMessage]]) -> Optional[str]:
