@@ -3,7 +3,7 @@ Hello new frenemies! I’m Roastmate – apparently one of you thinks someone he
 Here’s how this works:
 👋 Keep messaging how you normally do, I don’t bite.
 🔥 When someone says something that they deserve to get roasted on I MIGHT chime in.
-🗑️ I don’t save any of your messages for more than a couple of days. IDGAF about what you have to say, just sick burns. 
+🗑️ I don’t save your messages for more than a couple of days. IDGAF about what you have to say, just sick burns. 
 
 A few things to really make this work:
 🍤 Add me to your contacts so you can share this number next time you get catfished
