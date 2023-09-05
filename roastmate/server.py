@@ -1,16 +1,18 @@
 from datetime import datetime
 import random
-from typing import Optional, List
+from typing import Optional, List, Mapping
 
 import aiohttp
-from aiohttp import ClientSession
 
 from sanic import Sanic, Request
 from sanic.response import text
 from sanic.exceptions import SanicException
 
 from roastmate.db_client import DbClient
+from roastmate.llm_client import OpenAiClient
+from roastmate.prompts import get_group_message_roast_prompt
 from roastmate.sendblue_client import SendBlue
+from roastmate.types import TextMessage, SenderRole, Contact
 
 app = Sanic("Roastmate")
 db_client = DbClient.prod()
@@ -20,6 +22,7 @@ db_client = DbClient.prod()
 def init(app, loop):
     app.ctx.aiohttp_session = aiohttp.ClientSession(loop=loop)
     app.ctx.sendblue = SendBlue.init(app.ctx.aiohttp_session)
+    app.ctx.llm = OpenAiClient.default()
 
 
 @app.listener('after_server_stop')
@@ -28,34 +31,38 @@ def finish(app, loop):
     loop.close()
 
 
-@app.get("/")
-async def hello_world(request: Request):
-    return text("Hello, world.")
-
-
 @app.post("/receive_message")
 async def receive(request: Request):
     # TODO validate body schema
     # TODO handle non-group messages
+    # TODO ask for first_name
     body = request.json
     group_id = body.get('group_id', None)
+    print(body)
+    # Sender role is always USER since we are receiving the message
+    message_properties = parse_message(group_id, body) | {'sender_role': SenderRole.USER}
+    if group_id:
+        # TODO enrich all participant messages not just the one sending the message
+        message_properties['sender_name'] = (await get_single_contact(body['from_number'])).first_name
+        if not await is_known_group(group_id):
+            await insert_known_group(group_id)
+            await save_message(**message_properties)
+            welcome_message = await generate_welcome_message()
+            await app.ctx.sendblue.send_imessage_text(group_id, welcome_message)
+            return text("Officer I've never seen this group before")
+        else:
+            await save_message(**message_properties)
+            previous_messages = await get_previous_group_messages(group_id)
+            message = await generate_quippy_response(previous_messages)
 
-    if not group_id:
-        raise SanicException("We can only do group messages right now. Booooo.", status_code=400)
 
-    message_properties = parse_message(group_id, body)
-    if group_id and await is_known_group(group_id):
-        await save_message(**message_properties)
-        # TODO generate quippy response
-        message = await generate_quippy_response([])
-        await app.ctx.sendblue.send_imessage_text(group_id, message)
-        return text(f"We have seen group {group_id} before")
+            await save_message(group_id, message, "+11234567890", datetime.utcnow(), datetime.utcnow(), "Roastmate", SenderRole.LLM)
+            await app.ctx.sendblue.send_imessage_text(group_id, message)
+            return text(f"We have seen group {group_id} before")
     else:
-        await insert_known_group(group_id)
-        await save_message(**message_properties)
-        welcome_message = await generate_welcome_message()
-        await app.ctx.sendblue.send_imessage_text(group_id, welcome_message)
-        return text("Officer I've never seen this group before")
+        pass
+        # if imessage:
+        # else:
 
 
 ### utils
@@ -71,9 +78,9 @@ def parse_message(group_id: str, request_body: dict) -> dict:
         return {
             'group_id': group_id,
             'content': content,
-            'sender': sender,
+            'sender_number': sender,
             'date_sent': date_sent,
-            'date_received': datetime.now()
+            'date_received': datetime.now(),
         }
     else:
         raise SanicException(
@@ -90,9 +97,14 @@ async def generate_welcome_message() -> str:
     return welcome_messages[random.randrange(len(welcome_messages))]
 
 
-async def generate_quippy_response(previous_messages: [List[str]]) -> Optional[str]:
+async def generate_quippy_response(previous_messages: [List[TextMessage]]) -> Optional[str]:
     # TODO only respond sometimes
-    return "Hello! I'm Roastmate. I'm still cooking. And soon, you will too!"
+    # TODO handle very long texts
+    prompt = get_group_message_roast_prompt(previous_messages)
+    response = await app.ctx.llm.query(prompt)
+    if response.startswith("Roastmate:"):
+        response = response[len("Roastmate:"):].lstrip()
+    return response
 
 
 ### DB OPS
@@ -102,13 +114,61 @@ async def is_known_group(group_id: str) -> bool:
     return len(groups) > 0
 
 
-async def save_message(group_id: str, content: str, sender: str, date_sent: datetime, date_received: datetime):
+async def save_message(
+        group_id: str,
+        content: str,
+        sender_number: str,
+        date_sent: datetime,
+        date_received: datetime,
+        sender_name: str = None,
+        sender_role: SenderRole = SenderRole.USER
+):
     await db_client.query(
-        "INSERT INTO group_message(group_id, content, sender, date_sent, date_received) VALUES (:group_id, :content, :sender, :date_sent, "
-        ":date_received)",
-        {'group_id': group_id, 'content': content, 'sender': sender, 'date_sent': date_sent, 'date_received': date_received}
+        "INSERT INTO group_message(group_id, content, sender_number, sender_name, date_sent, date_received, sender_role) "
+        "VALUES (:group_id, :content, :sender_number, :sender_name, :date_sent, :date_received, :sender_role)",
+        {
+            'group_id': group_id,
+            'content': content,
+            'sender_number': sender_number,
+            'sender_name': sender_name,
+            'date_sent': date_sent,
+            'date_received': date_received,
+            'sender_role': sender_role.value
+        }
     )
 
 
 async def insert_known_group(group_id: str):
     await db_client.query("INSERT INTO imessage_group(id) VALUES (:group_id);", {'group_id': group_id})
+
+
+async def get_previous_group_messages(group_id: str, limit=5) -> List[TextMessage]:
+    messages = (await db_client.query(
+        f"""
+        SELECT sender_number, sender_name, content
+        FROM group_message
+        WHERE group_id=:group_id 
+        ORDER BY date_sent DESC 
+        LIMIT {limit};
+        """,
+        {'group_id': group_id}
+    )).fetchall()
+
+    return [TextMessage(sender_number=x[0], sender_name=x[1], content=x[2]) for x in messages]
+
+
+async def get_single_contact(number: str) -> Optional[Contact]:
+    """
+    returns number to contact
+    """
+    contacts = (await db_client.query(
+        f"""
+        SELECT number, name 
+        FROM contact 
+        WHERE number=:number
+        """,
+        variables={'number': number}
+    )).fetchall()
+
+    if len(contacts) == 1:
+        return Contact(number=contacts[0][0], first_name=contacts[0][1])

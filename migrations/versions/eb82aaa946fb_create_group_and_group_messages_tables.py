@@ -30,21 +30,41 @@ def upgrade() -> None:
         "group_message",
         sa.Column("group_id", sa.String(200)),
         sa.Column("date_sent", sa.TIMESTAMP(timezone=True)),
+        sa.Column("date_received", sa.TIMESTAMP(timezone=True), index=True),
         sa.Column("content", sa.TEXT),
-        sa.Column("sender", sa.TEXT),
-        sa.Column("date_received", sa.TIMESTAMP(timezone=True), index=True)
+        sa.Column("sender_number", sa.TEXT),
+        sa.Column("sender_name", sa.TEXT),
+        sa.Column("sender_role", sa.Enum("USER", "LLM", name="SenderRole")),
+    )
+
+    op.create_table(
+        "contact",
+        sa.Column("number", sa.TEXT, primary_key=True),
+        sa.Column("name", sa.TEXT, nullable=True),
     )
 
     op.create_foreign_key(
         constraint_name=fk_constraint,
         source_table="group_message",
-        referent_table="imessage_group",
         local_cols=['group_id'],
-        remote_cols=['id']
+        referent_table="imessage_group",
+        remote_cols=['id'],
     )
 
+    # op.create_foreign_key(
+    #     constraint_name="contact_number_fk",
+    #     source_table="group_message",
+    #     local_cols=["sender_number"],
+    #     referent_table="contact",
+    #     remote_cols=["number"],
+    # )
 
 def downgrade() -> None:
     op.drop_constraint(fk_constraint, table_name="group_message")
+    op.drop_constraint("contact_number_fk", table_name="group_message")
+
     op.drop_table("group_message")
     op.drop_table("imessage_group")
+    op.drop_table("contact")
+
+    op.execute('DROP TYPE "SenderRole";')
