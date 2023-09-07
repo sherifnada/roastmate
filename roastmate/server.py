@@ -120,6 +120,7 @@ async def request_group_participant_details(numbers: List[int]):
     # TODO track if we already know these contacts, and if we've already asked them for their numbers and how many times
     for number in numbers:
         await app.ctx.sendblue.send_imessage_dm(number, strings.DM_WELCOME_MESSAGE)
+        await app.ctx.sendblue.send_imessage_dm(number, media_url.VCARD)
 
 
 ### LLM OPS
