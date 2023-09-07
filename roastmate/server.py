@@ -3,6 +3,7 @@ import random
 from typing import Optional, List, Mapping
 
 import aiohttp
+import sanic.response
 
 from sanic import Sanic, Request
 from sanic.response import text
@@ -30,6 +31,11 @@ def init(app, loop):
 def finish(app, loop):
     loop.run_until_complete(app.ctx.aiohttp_session.close())
     loop.close()
+
+
+@app.get("/health")
+async def health(request: Request):
+    return sanic.response.json({"message": "healthy"})
 
 
 @app.post("/receive_message")
@@ -72,9 +78,14 @@ async def receive(request: Request):
             await app.ctx.sendblue.send_imessage_dm(from_number, response_message)
             return text("success")
         else:
+            # TODO make the group commands possible
+            # TODO don't respond every time unless roastmate is added
+            # TODO respond to 1:1 DMs everytime
+            return text("gotta be a roastmate pls mate")
             # Unknown command
             pass
     else:
+        return text("thanks but no thanks")
         # TODO direct, non-command DMs
         pass
         # if imessage:
