@@ -51,17 +51,9 @@ def upgrade() -> None:
         remote_cols=['id'],
     )
 
-    # op.create_foreign_key(
-    #     constraint_name="contact_number_fk",
-    #     source_table="group_message",
-    #     local_cols=["sender_number"],
-    #     referent_table="contact",
-    #     remote_cols=["number"],
-    # )
 
 def downgrade() -> None:
     op.drop_constraint(fk_constraint, table_name="group_message")
-    op.drop_constraint("contact_number_fk", table_name="group_message")
 
     op.drop_table("group_message")
     op.drop_table("imessage_group")

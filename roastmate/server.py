@@ -11,7 +11,7 @@ from sanic.exceptions import SanicException
 from roastmate import strings
 from roastmate.db_client import DbClient
 from roastmate.llm_client import OpenAiClient
-from roastmate.prompts import get_group_message_roast_prompt
+from roastmate.prompts import get_group_message_roast_prompt, get_name_saved_prompt
 from roastmate.sendblue_client import SendBlue
 from roastmate.types import TextMessage, SenderRole, Contact
 
@@ -39,25 +39,43 @@ async def receive(request: Request):
     # TODO ask for first_name
     body = request.json
     group_id = body.get('group_id', None)
+    from_number = body['from_number']
     print(body)
     # Sender role is always USER since we are receiving the message
     message_properties = parse_message(group_id, body) | {'sender_role': SenderRole.USER}
     if group_id:
         # TODO enrich all participant messages not just the one sending the message
-        message_properties['sender_name'] = (await get_single_contact(body['from_number'])).first_name
-        if not await is_known_group(group_id):
-            await insert_known_group(group_id)
-            await save_message(**message_properties)
-            await app.ctx.sendblue.send_imessage_text(group_id, strings.GROUP_WELCOME_MESSAGE)
-            return text("Officer I've never seen this group before")
-        else:
+        message_properties['sender_name'] = await get_contact_name(from_number)
+        if await is_known_group(group_id):
             await save_message(**message_properties)
             previous_messages = await get_previous_group_messages(group_id)
             message = await generate_quippy_response(previous_messages)
             await save_message(group_id, message, "+11234567890", datetime.utcnow(), datetime.utcnow(), "Roastmate", SenderRole.LLM)
-            await app.ctx.sendblue.send_imessage_text(group_id, message)
+            await app.ctx.sendblue.send_imessage_group_text(group_id, message)
             return text(f"We have seen group {group_id} before")
+        else:
+            await insert_known_group(group_id)
+            await save_message(**message_properties)
+            await app.ctx.sendblue.send_imessage_group_text(group_id, strings.GROUP_WELCOME_MESSAGE)
+
+            convo_participants = body.get("participants", [])
+            await create_contacts_from_numbers(convo_participants)
+            await request_group_participant_details(convo_participants)
+
+            return text("Officer I've never seen this group before")
+    elif body.get("content", "").lower().startswith("roastmate please"):
+        rest_of_text = body.get("content")[len("roastmate please"):].lstrip()
+        if rest_of_text.lower().startswith("call me"):
+            name = rest_of_text[len("call me"):].lstrip()
+            await set_contact_name(from_number, name)
+            response_message = await generate_name_saved_response(name)
+            await app.ctx.sendblue.send_imessage_dm(from_number, response_message)
+            return text("success")
+        else:
+            # Unknown command
+            pass
     else:
+        # TODO direct, non-command DMs
         pass
         # if imessage:
         # else:
@@ -85,6 +103,18 @@ def parse_message(group_id: str, request_body: dict) -> dict:
             'Expected content, sender, and date_updated to be set for a group message webhook',
             status_code=400
         )
+
+
+async def request_group_participant_details(numbers: List[int]):
+    # TODO track if we already know these contacts, and if we've already asked them for their numbers and how many times
+    for number in numbers:
+        await app.ctx.sendblue.send_imessage_dm(number, strings.DM_WELCOME_MESSAGE)
+
+
+### LLM OPS
+async def generate_name_saved_response(name: str) -> str:
+    prompt = get_name_saved_prompt(name)
+    return await app.ctx.llm.query(prompt)
 
 
 async def generate_quippy_response(previous_messages: [List[TextMessage]]) -> Optional[str]:
@@ -145,6 +175,30 @@ async def get_previous_group_messages(group_id: str, limit=5) -> List[TextMessag
     )).fetchall()
 
     return [TextMessage(sender_number=x[0], sender_name=x[1], content=x[2]) for x in messages]
+
+
+async def create_contacts_from_numbers(numbers: List[str]):
+    if len(numbers) == 0:
+        return
+
+    variables = {str(i): number for i, number in enumerate(numbers)}
+    values = ",".join([f"(:{i})" for i in range(len(numbers))])
+
+    await db_client.query(f"""
+        INSERT INTO contact(number) VALUES {values}    
+    """, variables=variables)
+
+
+async def set_contact_name(number: str, name: str):
+    await db_client.query("""
+    UPDATE contact SET name=:name WHERE number=:number;
+    """, {'name': name, 'number': number})
+
+
+async def get_contact_name(number: str) -> Optional[str]:
+    contact = await get_single_contact(number)
+    if contact:
+        return contact.first_name
 
 
 async def get_single_contact(number: str) -> Optional[Contact]:

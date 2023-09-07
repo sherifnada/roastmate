@@ -17,16 +17,20 @@ Carry on, people!
 
 
 DM_WELCOME_MESSAGE = """
-Hello new frenemy! I’m Roastmate 👋
+Hello new frenemy! 👋 I’m Roastmate, the world's funniest robot. 
+
+A friend (or enemy) of yours added me to a group text you are in.  
+
+Roasts hit harder when we’re on a first name basis. What's your first name? Respond in the format "Roastmate please call me NAME"
+For example: "Roastmate please call me Rachel".
 
 A few things before we get started:
 🗑️ I don’t save any of your message for more than a couple of days. IDGAF about what you have to say, just sick burns. 
-📲 You can message me directly, add me to an existing group, or start a group with me and whoever you want. Your mom, landlord, boss, ex… I don’t care… I’ll roast you all. Try it out, I dare you!
+📲 You can message me directly, add me to an existing group, or start a group with me and whoever you want. Your mom, landlord, boss, ex… I don’t care… I’ll roast you all.
 🍤 Add me to your contacts so you can share this number next time you get catfished
 📸 Follow me on Twitter and Insta… when you get roasted good send me a DM of a screenshot and I’ll feature you.
 https://twitter.com/Roastmate_ai
 https://www.instagram.com/roastmate.ai/
 
-Lastly, roasts hit harder when we’re on a first name basis. 
-What's your first name?
+Now send me that first name so I can cook. 
 """
