@@ -34,3 +34,8 @@ https://www.instagram.com/roastmate.ai/
 
 Now send me that first name so I can cook. 
 """
+
+
+VCARD = """
+URL
+"""
