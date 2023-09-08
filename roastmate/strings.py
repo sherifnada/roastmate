@@ -17,7 +17,7 @@ Carry on, people!
 
 
 DM_WELCOME_MESSAGE = """
-Hello new frenemy! 👋 I’m Roastmate, the world's funniest robot. 
+Hello new frenemy! 👋 I’m Roastmate, the world's funniest robot. You can learn more about me at www.roastmate.ai
 
 A friend (or enemy) of yours added me to a group text you are in.  
 
