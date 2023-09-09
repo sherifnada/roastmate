@@ -24,6 +24,7 @@ def upgrade() -> None:
     op.create_table(
         "imessage_group",
         sa.Column('id', sa.String(200), primary_key=True),
+        sa.Column('created_at', sa.TIMESTAMP, default=sa.func.current_date())
     )
 
     op.create_table(
