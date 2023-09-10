@@ -6,7 +6,7 @@ build:
   docker:
     web: Dockerfile
 run:
-  web: pwd; ls -a; ls .venv/bin
+  web: pwd; ls -a;
 #release:
 #  command:
 #    - ./release.sh

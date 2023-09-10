@@ -8,7 +8,6 @@ RUN pip install "poetry==$POETRY_VERSION"
 WORKDIR /roastmate
 COPY . .
 RUN poetry install
-RUN poetry shell
 
 EXPOSE 8000
 
