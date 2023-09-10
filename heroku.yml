@@ -6,7 +6,7 @@ build:
   docker:
     web: Dockerfile
 run:
-  web: pwd
+  web: pwd; ls;
 #release:
 #  command:
 #    - ./release.sh
