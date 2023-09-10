@@ -5,7 +5,7 @@ setup:
 build:
   docker:
     web: Dockerfile
-release:
-  command:
-    - ./release.sh
-  image: web
+#release:
+#  command:
+#    - ./release.sh
+#  image: web
