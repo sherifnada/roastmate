@@ -6,7 +6,7 @@ build:
   docker:
     web: Dockerfile
 run:
-  web: pwd; ls -a;
+  web: pwd; ls; ls .venv/bin; poetry env info; poetry run sanic --help;
 #release:
 #  command:
 #    - ./release.sh
