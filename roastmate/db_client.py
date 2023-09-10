@@ -36,6 +36,6 @@ class DbClient:
     def prod(cls, debug: bool = False) -> 'DbClient':
         if db_url := os.getenv('DATABASE_URL'):
             return DbClient(**parse_db_creds_from_url(db_url))
-        else: 
+        else:
             with open("secrets/db.json", "r") as f:
                 return DbClient(**(json.loads(f.read()) | {'debug': debug}))

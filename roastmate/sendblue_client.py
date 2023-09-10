@@ -1,4 +1,5 @@
 import json
+import os
 
 from aiohttp import ClientSession
 
@@ -41,10 +42,11 @@ class SendBlue:
             response.raise_for_status()
             return await response.json()
 
-
     @classmethod
     def init(cls, client: ClientSession) -> 'SendBlue':
-        with open("secrets/sendblue.json", "r") as f:
-            # TODO
-            creds = json.loads(f.read())
-            return SendBlue(creds['api_key'], creds['api_secret'], client)
+        if os.getenv("SENDBLUE_CREDENTIALS"):
+            creds = json.loads(os.getenv("SENDBLUE_CREDENTIALS"))
+        else:
+            with open("secrets/sendblue.json", "r") as f:
+                creds = json.loads(f.read())
+        return SendBlue(creds['api_key'], creds['api_secret'], client)

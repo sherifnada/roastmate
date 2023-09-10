@@ -1,4 +1,5 @@
 import json
+import os
 from abc import abstractmethod
 import openai
 
@@ -28,6 +29,9 @@ class OpenAiClient(LlmClient):
 
     @classmethod
     def default(cls) -> 'OpenAiClient':
-        with open("secrets/openai.json", "r") as f:
-            api_key = json.loads(f.read())['api-key']
-            return OpenAiClient(api_key=api_key)
+        if os.getenv("OPENAI_API_KEY"):
+            api_key = json.loads(os.getenv("OPENAI_API_KEY"))
+        else:
+            with open("secrets/openai.json", "r") as f:
+                api_key = json.loads(f.read())['api-key']
+        return OpenAiClient(api_key=api_key)
