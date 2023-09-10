@@ -8,3 +8,4 @@ build:
 release:
   command:
     - ./release.sh
+  image: web
