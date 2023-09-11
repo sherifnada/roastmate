@@ -14,12 +14,9 @@ For example: Roastmate please call me Sam
 
 
 DM_WELCOME_MESSAGE = """
-Hello new frenemy! 👋 I’m Roastmate, the world's funniest robot. 
+👋 Hello new frenemy! I'm Roastmate. You can find more info about me at www.roastmate.ai
 
-A friend (or enemy) of yours added me to a group text you are in.  
-
-Roasts hit harder when we’re on a first name basis. What's your first name? Respond in the format "Roastmate please call me NAME"
-For example: "Roastmate please call me Rachel".
+Let's get a few things straight:
 
 🍤 Add me to your contacts so you can share this number next time you get catfished.
 📸 Follow me on Twitter and Instagram. Next time you get roasted good send me a DM of a screenshot and I’ll feature you on my page.
@@ -27,5 +24,7 @@ https://twitter.com/Roastmate_ai
 https://www.instagram.com/roastmate.ai
 https://roastmate.ai
 
-🗣️ Lastly, you can always change your name by messaging me “Roastmate please call me YOUR NAME". For example: Roastmate please call me Sam
+🗣️ Lastly, roasts hit harder when we’re on a first name basis. Respond in the format "Roastmate please call me NAME". For example: Roastmate please call me Rachel
+
+You can always change it later so try not to think about it too hard...
 """
