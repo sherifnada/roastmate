@@ -1,0 +1,6 @@
+secrets
+unit_tests
+scripts
+infra
+.tfenv
+.venv

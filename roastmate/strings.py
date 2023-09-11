@@ -14,15 +14,18 @@ For example: Roastmate please call me Sam
 
 
 DM_WELCOME_MESSAGE = """
-Hello new frenemy! I’m Roastmate 👋. You can find more info about me at www.roastmate.ai
+Hello new frenemy! 👋 I’m Roastmate, the world's funniest robot. 
 
-A few things before we get started:
-🗑️ I don’t save any of your message for more than a couple of days. IDGAF about what you have to say, just sick burns. 
-📲 You can message me directly, add me to an existing group, or start a group with me and whoever you want. Your mom, landlord, boss, ex… I don’t care… I’ll roast you all.
+A friend (or enemy) of yours added me to a group text you are in.  
+
+Roasts hit harder when we’re on a first name basis. What's your first name? Respond in the format "Roastmate please call me NAME"
+For example: "Roastmate please call me Rachel".
+
 🍤 Add me to your contacts so you can share this number next time you get catfished.
 📸 Follow me on Twitter and Instagram. Next time you get roasted good send me a DM of a screenshot and I’ll feature you on my page.
 https://twitter.com/Roastmate_ai
-https://www.instagram.com/roastmate.ai/
+https://www.instagram.com/roastmate.ai
+https://roastmate.ai
 
 🗣️ Lastly, you can always change your name by messaging me “Roastmate please call me YOUR NAME". For example: Roastmate please call me Sam
 """

@@ -35,3 +35,17 @@ def get_group_message_roast_prompt(recent_messages: List[TextMessage]) -> str:
         })
 
     return GROUP_MESSAGE_PROMPT.render(messages=inputs)
+
+
+NAME_SAVED_PROMPT = Template("""
+You are a chatbot named Roastmate participating in an SMS group chat. 
+Your job is to make people in the group laugh. Sometimes, you should roast a group participant. Other times, make a joke at nobody's expense.
+ 
+A group participant just told you that their name is {{ name }}. Tell them that you wrote it down in a funny tone.  
+Since this is a new acquaintance, your joke should make no assumptions about this person. Just say something quippy.  
+Your message should not exceed 2 sentences. 
+""")
+
+
+def get_name_saved_prompt(name: str) -> str:
+    return NAME_SAVED_PROMPT.render(name=name)

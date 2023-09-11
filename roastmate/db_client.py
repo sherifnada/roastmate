@@ -1,9 +1,20 @@
 import json
+import os
+import re
 from typing import Any, Mapping
 
 from sqlalchemy.sql import text
 
 from sqlalchemy.ext.asyncio import create_async_engine
+
+
+def parse_db_creds_from_url(url: str) -> Mapping[str, Any]:
+    pattern = re.compile(r"postgres(ql)?://(?P<user>[^:]+):(?P<password>[^@]+)@(?P<host>[^:]+):(?P<port>\d+)/(?P<database>.+)")
+    match = pattern.match(url)
+    if match:
+        return match.groupdict()
+    else:
+        raise Exception(f"Database URL string is not in the expected format!")
 
 
 class DbClient:
@@ -23,5 +34,8 @@ class DbClient:
 
     @classmethod
     def prod(cls, debug: bool = False) -> 'DbClient':
-        with open("secrets/db.json", "r") as f:
-            return DbClient(**(json.loads(f.read()) | {'debug': debug}))
+        if db_url := os.getenv('DATABASE_URL'):
+            return DbClient(**parse_db_creds_from_url(db_url))
+        else:
+            with open("secrets/db.json", "r") as f:
+                return DbClient(**(json.loads(f.read()) | {'debug': debug}))
