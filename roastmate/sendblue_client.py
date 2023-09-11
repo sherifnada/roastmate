@@ -1,6 +1,6 @@
 import json
 import os
-
+import roastmate.constants as Constants
 from aiohttp import ClientSession
 
 
@@ -44,8 +44,8 @@ class SendBlue:
 
     @classmethod
     def init(cls, client: ClientSession) -> 'SendBlue':
-        if os.getenv("SENDBLUE_CREDENTIALS"):
-            creds = json.loads(os.getenv("SENDBLUE_CREDENTIALS"))
+        if os.getenv(Constants.SENDBLUE_CREDENTIALS):
+            creds = json.loads(os.getenv(Constants.SENDBLUE_CREDENTIALS))
         else:
             with open("secrets/sendblue.json", "r") as f:
                 creds = json.loads(f.read())

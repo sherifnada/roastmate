@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import roastmate.constants as Constants
 from typing import Any, Mapping
 
 from sqlalchemy.sql import text
@@ -34,7 +35,7 @@ class DbClient:
 
     @classmethod
     def prod(cls, debug: bool = False) -> 'DbClient':
-        if db_url := os.getenv('DATABASE_URL'):
+        if db_url := os.getenv(Constants.DATABASE_URL):
             return DbClient(**parse_db_creds_from_url(db_url))
         else:
             with open("secrets/db.json", "r") as f:

@@ -2,6 +2,7 @@ import json
 import os
 from abc import abstractmethod
 import openai
+import roastmate.constants as Constants
 
 
 class LlmClient:
@@ -29,9 +30,13 @@ class OpenAiClient(LlmClient):
 
     @classmethod
     def default(cls) -> 'OpenAiClient':
-        if os.getenv("OPENAI_API_KEY"):
-            api_key = json.loads(os.getenv("OPENAI_API_KEY"))
-        else:
-            with open("secrets/openai.json", "r") as f:
-                api_key = json.loads(f.read())['api-key']
-        return OpenAiClient(api_key=api_key)
+        return OpenAiClient(api_key=parse_api_key())
+
+
+def parse_api_key() -> str:
+    if os.getenv(Constants.OPENAI_API_KEY):
+        api_key = json.loads(os.getenv(Constants.OPENAI_API_KEY))['api-key']
+    else:
+        with open("secrets/openai.json", "r") as f:
+            api_key = json.loads(f.read())['api-key']
+    return api_key

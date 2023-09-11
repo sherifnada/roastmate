@@ -6,16 +6,20 @@ from sqlalchemy import pool
 from alembic import context
 import json
 import os
+
+from roastmate.db_client import parse_db_creds_from_url
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 
 
 if os.getenv("DATABASE_URL"):
-    db_url = os.getenv("DATABASE_URL")
+    db_creds = parse_db_creds_from_url(os.getenv("DATABASE_URL"))
 else:
     with open("secrets/db.json", "r") as f:
         db_creds = json.loads(f.read())
-        db_url = f"postgresql://{db_creds['user']}:{db_creds['password']}@{db_creds['host']}/{db_creds['database']}"
+
+db_url = f"postgresql://{db_creds['user']}:{db_creds['password']}@{db_creds['host']}/{db_creds['database']}"
 
 config = context.config
 config.set_main_option("sqlalchemy.url", db_url)
