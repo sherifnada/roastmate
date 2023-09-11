@@ -45,8 +45,8 @@ async def receive(request: Request):
     # TODO handle non-group messages
     # TODO ask for first_name
     body = request.json
+    print(body)
     group_id = body.get('group_id', None)
-
     # Sender role is always USER since we are receiving the message
     if is_cmd(body.get("content", "")):
         return await handle_roastmate_please_cmd(body)
@@ -93,6 +93,10 @@ async def handle_group_message(request_body: Mapping[str, Any]) -> HTTPResponse:
     message_properties['sender_name'] = await get_contact_name(from_number)
     if await is_known_group(group_id):
         await save_message(**message_properties)
+
+        if random.randint(1, 5) != 1:
+            return text("Skipping a response since we're trying to respond only 20% of the time")
+
         previous_messages = await get_previous_group_messages(group_id)
         message = await generate_quippy_response(previous_messages)
         await save_message(group_id, message, "+11234567890", datetime.utcnow(), datetime.utcnow(), "Roastmate", SenderRole.LLM)
