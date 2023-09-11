@@ -1,15 +1,16 @@
 from datetime import datetime
 import random
-from typing import Optional, List, Mapping
+from typing import Optional, List, Mapping, Any
 
 import aiohttp
 import sanic.response
 
-from sanic import Sanic, Request
+from sanic import Sanic, Request, HTTPResponse
 from sanic.response import text
 from sanic.exceptions import SanicException
 
 from roastmate import strings
+from roastmate.command_parser import is_cmd, parse_cmd, CmdType
 from roastmate.db_client import DbClient
 from roastmate.llm_client import OpenAiClient
 from roastmate.prompts import get_group_message_roast_prompt, get_name_saved_prompt
@@ -45,55 +46,73 @@ async def receive(request: Request):
     # TODO ask for first_name
     body = request.json
     group_id = body.get('group_id', None)
-    from_number = body['from_number']
-    print(body)
+
     # Sender role is always USER since we are receiving the message
-    message_properties = parse_message(group_id, body) | {'sender_role': SenderRole.USER}
+    if is_cmd(body.get("content", "")):
+        return await handle_roastmate_please_cmd(body)
+
     if group_id:
-        # TODO enrich all participant messages not just the one sending the message
-        message_properties['sender_name'] = await get_contact_name(from_number)
-        if await is_known_group(group_id):
-            await save_message(**message_properties)
-            previous_messages = await get_previous_group_messages(group_id)
-            message = await generate_quippy_response(previous_messages)
-            await save_message(group_id, message, "+11234567890", datetime.utcnow(), datetime.utcnow(), "Roastmate", SenderRole.LLM)
-            await app.ctx.sendblue.send_imessage_group_text(group_id, message)
-            return text(f"We have seen group {group_id} before")
-        else:
-            await insert_known_group(group_id)
-            await save_message(**message_properties)
-            await app.ctx.sendblue.send_imessage_group_text(group_id, strings.GROUP_WELCOME_MESSAGE)
-
-            convo_participants = body.get("participants", [])
-            await create_contacts_from_numbers(convo_participants)
-            await request_group_participant_details(convo_participants)
-
-            return text("Officer I've never seen this group before")
-    elif body.get("content", "").lower().startswith("roastmate please"):
-        rest_of_text = body.get("content")[len("roastmate please"):].lstrip()
-        if rest_of_text.lower().startswith("call me"):
-            name = rest_of_text[len("call me"):].lstrip()
-            await set_contact_name(from_number, name)
-            response_message = await generate_name_saved_response(name)
-            await app.ctx.sendblue.send_imessage_dm(from_number, response_message)
-            return text("success")
-        else:
-            # TODO make the group commands possible
-            # TODO don't respond every time unless roastmate is added
-            # TODO respond to 1:1 DMs everytime
-            return text("gotta be a roastmate pls mate")
-            # Unknown command
-            pass
+        return await handle_group_message(body)
     else:
         return text("thanks but no thanks")
         # TODO direct, non-command DMs
         pass
-        # if imessage:
-        # else:
 
 
-### utils
-def parse_message(group_id: str, request_body: dict) -> dict:
+# handlers
+async def handle_roastmate_please_cmd(request_body: Mapping[str, Any]) -> HTTPResponse:
+    cmd = parse_cmd(request_body['content'])
+
+    # TODO this should be a parsed request body via e.g pydantic
+    group_id = request_body.get("group_id", None)
+    from_number = request_body['from_number']
+
+    if cmd.cmd_type == CmdType.CallMe:
+        # TODO Each command should probably be handled separately
+        await set_contact_name(request_body['from_number'], cmd.name)
+        response_message = await generate_name_saved_response(cmd.name)
+        if group_id:
+            await app.ctx.sendblue.send_imessage_group_text(group_id, response_message)
+        else:
+            await app.ctx.sendblue.send_imessage_dm(from_number, response_message)
+    else:
+        # TODO make the group commands possible
+        # TODO don't respond every time unless roastmate is added
+        # TODO respond to 1:1 DMs everytime
+        return text("gotta be a roastmate pls mate")
+        # Unknown command
+        pass
+    return text("command processed successfully")
+
+
+async def handle_group_message(request_body: Mapping[str, Any]) -> HTTPResponse:
+    # TODO enrich all participant messages not just the one sending the message
+    group_id = request_body.get('group_id', None)
+    from_number = request_body['from_number']
+    message_properties = parse_message(group_id, request_body) | {'sender_role': SenderRole.USER}
+    message_properties['sender_name'] = await get_contact_name(from_number)
+    if await is_known_group(group_id):
+        await save_message(**message_properties)
+        previous_messages = await get_previous_group_messages(group_id)
+        message = await generate_quippy_response(previous_messages)
+        await save_message(group_id, message, "+11234567890", datetime.utcnow(), datetime.utcnow(), "Roastmate", SenderRole.LLM)
+        await app.ctx.sendblue.send_imessage_group_text(group_id, message)
+        return text(f"We have seen group {group_id} before")
+    else:
+        await insert_known_group(group_id)
+        await save_message(**message_properties)
+        await app.ctx.sendblue.send_imessage_group_text(group_id, strings.GROUP_WELCOME_MESSAGE)
+
+        convo_participants = request_body.get("participants", [])
+        await create_contacts_from_numbers(convo_participants)
+        await request_group_participant_details(convo_participants)
+
+        return text("Officer I've never seen this group before")
+    pass
+
+
+# utils
+def parse_message(group_id: str, request_body: Mapping[str, Any]) -> dict:
     """
     # TODO this is stupid. Use an ORM or some request body validation.
     Raises SanicException if the message is invalid
