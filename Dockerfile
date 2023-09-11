@@ -7,9 +7,12 @@ ENV PORT=8000
 RUN pip install "poetry==$POETRY_VERSION"
 
 WORKDIR /roastmate
-COPY . .
+COPY poetry.toml .
+COPY pyproject.toml .
 RUN poetry install
+
+COPY . .
 
 EXPOSE 8000
 
-CMD ["poetry", "run", "sanic", "roastmate.server:app", "--host=0.0.0.0", "--port", "$PORT"]
+CMD poetry run sanic roastmate.server.app --host=0.0.0.0 --port=$PORT
