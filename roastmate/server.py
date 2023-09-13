@@ -94,10 +94,10 @@ async def handle_group_message(request_body: Mapping[str, Any]) -> HTTPResponse:
     if await is_known_group(group_id):
         await save_message(**message_properties)
 
-        if random.randint(1, 5) != 1:
+        if random.randint(1, 10) != 1:
             return text("Skipping a response since we're trying to respond only 20% of the time")
 
-        previous_messages = await get_previous_group_messages(group_id)
+        previous_messages = await get_previous_group_messages(group_id, 20)
         message = await generate_quippy_response(previous_messages)
         await save_message(group_id, message, "+11234567890", datetime.utcnow(), datetime.utcnow(), "Roastmate", SenderRole.LLM)
         await app.ctx.sendblue.send_imessage_group_text(group_id, message)
@@ -196,7 +196,7 @@ async def insert_known_group(group_id: str):
     await db_client.query("INSERT INTO imessage_group(id) VALUES (:group_id);", {'group_id': group_id})
 
 
-async def get_previous_group_messages(group_id: str, limit=5) -> List[TextMessage]:
+async def get_previous_group_messages(group_id: str, limit: int = 5) -> List[TextMessage]:
     messages = (await db_client.query(
         f"""
         SELECT sender_number, sender_name, content
