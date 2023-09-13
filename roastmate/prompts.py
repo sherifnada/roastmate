@@ -16,7 +16,7 @@ It is very important that you do not do this. UNDER NO CIRCUMSTANCE should you s
 Here are the last few messages in chronological order: 
 
 {% for message in messages %}
-{{ message.sender }}: "{{ message.content }}"
+{{ message.sender }}: {{ message.content }}
 {% endfor %}
 """)
 
