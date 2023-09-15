@@ -218,7 +218,7 @@ async def create_contacts_from_numbers(numbers: List[str]):
 
     for n in numbers:
         if not await get_single_contact(n):
-            await db_client.query(f"INSERT INTO contact(number) VALUES (n);", variables={'n': n})
+            await db_client.query(f"INSERT INTO contact(number) VALUES (:n);", variables={'n': n})
 
 
 async def set_contact_name(number: str, name: str):
