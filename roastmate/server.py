@@ -216,12 +216,9 @@ async def create_contacts_from_numbers(numbers: List[str]):
     if len(numbers) == 0:
         return
 
-    variables = {str(i): number for i, number in enumerate(numbers)}
-    values = ",".join([f"(:{i})" for i in range(len(numbers))])
-
-    await db_client.query(f"""
-        INSERT INTO contact(number) VALUES {values}    
-    """, variables=variables)
+    for n in numbers:
+        if not await get_single_contact(n):
+            await db_client.query(f"INSERT INTO contact(number) VALUES (n);", variables={'n': n})
 
 
 async def set_contact_name(number: str, name: str):
