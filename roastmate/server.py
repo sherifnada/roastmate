@@ -39,6 +39,11 @@ async def health(request: Request):
     return sanic.response.json({"message": "healthy"})
 
 
+async def handle_dm(body):
+
+    pass
+
+
 @app.post("/receive_message")
 async def receive(request: Request):
     # TODO validate body schema
@@ -54,6 +59,7 @@ async def receive(request: Request):
     if group_id:
         return await handle_group_message(body)
     else:
+        return await handle_dm(body)
         return text("thanks but no thanks")
         # TODO direct, non-command DMs
         pass
@@ -143,7 +149,9 @@ def parse_message(group_id: str, request_body: Mapping[str, Any]) -> dict:
 async def request_group_participant_details(numbers: List[int]):
     # TODO track if we already know these contacts, and if we've already asked them for their numbers and how many times
     for number in numbers:
-        await app.ctx.sendblue.send_imessage_dm(number, strings.DM_WELCOME_MESSAGE)
+        contact = await get_single_contact(number)
+        if not contact.first_name:
+            await app.ctx.sendblue.send_imessage_dm(number, strings.DM_WELCOME_MESSAGE)
 
 
 ### LLM OPS
