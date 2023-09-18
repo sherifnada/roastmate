@@ -9,6 +9,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects.postgresql import ENUM
 
 
 # revision identifiers, used by Alembic.
@@ -27,7 +28,7 @@ def upgrade() -> None:
         sa.Column("date_received", sa.TIMESTAMP(timezone=True), index=True),
         sa.Column("content", sa.TEXT),
         sa.Column("sender_name", sa.TEXT),
-        sa.Column("sender_role", sa.Enum("USER", "LLM", name="SenderRole")),
+        sa.Column("sender_role",  ENUM("USER", "LLM", name="SenderRole", create_type=False)),
     )
 
 
