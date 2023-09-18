@@ -255,7 +255,7 @@ async def get_previous_dm_messages(with_number: str, limit: int):
         ORDER BY date_sent DESC 
         LIMIT {limit};
         """,
-        {'from_number': with_number}
+        {'with_number': with_number}
     )).fetchall()
 
     return [TextMessage(sender_number=x[0], sender_name=x[1], content=x[2]) for x in messages]
