@@ -81,6 +81,8 @@ async def handle_dm(body):
     if not contact:
         await request_contact_details([from_number])
 
+    return text("DM handled")
+
 
 async def handle_roastmate_please_cmd(request_body: Mapping[str, Any]) -> HTTPResponse:
     cmd = parse_cmd(request_body['content'])
