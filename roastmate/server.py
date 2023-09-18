@@ -54,7 +54,7 @@ async def receive(request: Request):
     if group_id:
         return await handle_group_message(body)
     else:
-        pritn("handling dm")
+        print("handling dm")
         return await handle_dm(body)
 
 
