@@ -12,7 +12,7 @@ Stack:
 * Sendblue.co (for programmatically sending iMessage)
 * ChatGPT
 
-It was retired in October 2023 after a rapid decline in number of friends. 
+It was retired in October 2023 after a rapid decline in number of friends. Some of Roastmate's greatest hits can be found [here](https://www.instagram.com/roastmate.ai/).
 
 
 ## How did Roastmate work? 
