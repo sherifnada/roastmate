@@ -1,6 +1,7 @@
 # Roastmate
-_what are you looking at?_
 ![image](https://github.com/sherifnada/roastmate/assets/6246757/a2e17fd3-bc42-428d-bb51-d67f65e73e5f)
+
+_what are you looking at?_
 
 ## 1) What?
 Roastmate is an iMessage chatbot that roasts you, your friends, and anyone who happened to be within line of sight of your phone screen. 
